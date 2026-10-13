@@ -1,6 +1,42 @@
+require('dotenv').config();
 const users = require("../models/user");
 const GeminiApi = require("@google/genai");
 const Expense = require("../models/expense");
+const { GoogleGenAI } = require('@google/genai');
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const S3services = require('../services/S3services');
+const categorizeExpense  = require('../services/aiService');
+
+
+
+const suggestCategory = async (req, res) => {
+    try {
+        const { descriptionVal } = req.body;
+        
+        if (!descriptionVal || descriptionVal.trim() === '') {
+            return res.status(400).json({ message: "Description is required" });
+        }
+        
+         console.log(" suggestCategory controller hit","description ",descriptionVal);
+        const response = await ai.models.generateContent({
+            model: 'gemini-3.8-flash',
+            contents: `Categorize this expense description into a single concise category name (e.g., Food, Travel, Shopping, Bills, Entertainment): "${descriptionVal}". Return only the category word.`
+        });
+
+        console.log("response of AI",response);
+        const suggestedCategory = response.text ? response.text.trim() : 'General';
+
+        console.log(suggestedCategory,"ye hai output");
+        
+        return res.status(200).json({ category: suggestedCategory });
+    } catch (err) {
+        // return res.status(500).json({ message: "Failed to generate category", error: err.message });
+        console.error("Server Error in suggestCategory:", err);
+        return res.status(500).json({ message: "Internal server error", category: "General" });
+    }
+};
+
+
 
 
 const addExpense = async (req,res)=>{
@@ -11,25 +47,24 @@ const addExpense = async (req,res)=>{
      const {amount,category,description} = req.body
      console.log(amount,category,description);
 
-    // AI Integration
-    // const ai = new GeminiApi.GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    //  const aiResult = await categorizeExpense(description);
+    //  console.log(aiResult);
+    //  const Genratecategory = aiResult.category
+    //  console.log(Genratecategory);
 
-    // const response = await ai.models.generateContent({
-    //   "model": "gemini-3-flash-preview",
-    //   "contents": `one category for this expense = " ${description}"`
-    // })
-    // const categoryval = response.text;
+    //  if(!amount || !category || !description){
+    //     alert("Please Fill all fields")
+    //     return;
+    //  }
          
         const expense = await Expense.create({
             amount,
-            category,
+            category: category || 'General',
             description,
             userId: req.user.userId
         });
 
-        console.log("Expense created")
         const user = await users.findById(req.user.userId);
-        console.log(user)
 
         await users.findByIdAndUpdate(
              req.user.userId,
@@ -46,6 +81,10 @@ const addExpense = async (req,res)=>{
      }
     
 }
+
+
+
+
 
 
 ///////////////// GET Expenses //////////////
@@ -140,8 +179,6 @@ const updateExpense = async (req, res) => {
 
 
 
-
-
 const premiumUserFunction = async (req, res) => {
      console.log("show primum chala controller m");
     try {
@@ -219,6 +256,7 @@ const downloadExpenses = async (req, res) => {
         }
 
         const stringifiedExpense = JSON.stringify(expenses, null, 2);
+        console.log(stringifiedExpense);
 
         const fileName = `expenses/user-${req.user.userId}/${Date.now()}.json`;
 
@@ -258,5 +296,6 @@ module.exports = {
     updateExpense,
     premiumUserFunction,
     getAllExpenseForReport,
-    downloadExpenses
+    downloadExpenses,
+    suggestCategory
 };

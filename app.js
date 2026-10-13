@@ -1,4 +1,4 @@
-require("dotenv").config();
+// require("dotenv").config();
 const path = require("path");
 const fs = require("fs");
 const https = require("https");
@@ -66,7 +66,7 @@ console.log("mongoDb connecting....")
 
 connectDB()
     .then(() => {
-        console.log("MongoDB connected");
+        console.log("Connected");
 
         app.listen(PORT, () => {
             console.log("Server running on PORT",PORT);

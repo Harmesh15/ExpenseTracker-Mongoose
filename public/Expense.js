@@ -1,6 +1,6 @@
 let form = document.querySelector("form");
 let amount = document.querySelector("#inputval");
-let category = document.querySelector("#select");
+let category = document.querySelector("#categoryId");
 let description = document.querySelector("#descinput");
 let button = document.querySelector("button");
 const logoutBtn = document.getElementById("logoutBtn");
@@ -18,10 +18,44 @@ const pageInfo = document.getElementById("pageInfo");
 
 
 
+// const descriptionInput = document.getElementById('description');
+// const categoryInput = document.getElementById('category');
+
+
+
 const ContentList = document.getElementById("contentList")
 
 let currentPage = 1;
 let currentLimit = 5;
+
+
+
+let timer;
+description.addEventListener('input', () => {
+    clearTimeout(timer);
+
+    const descriptionVal = description.value.trim();
+    if (descriptionVal.length < 3) return;
+
+      timer = setTimeout(async () => {
+        category.value = "Generating...";
+
+        try {
+            const res = await axios.post('/expense/suggest-category',{ descriptionVal })
+            console.log(res);
+            const data = res.data.category;
+            console.log(data);
+            category.value = data;
+        } catch (err) {
+            category.value = "General";
+        }
+}, 1000);
+});
+
+
+
+
+
 
 form.addEventListener("submit", async function (event) {
   event.preventDefault();
@@ -47,6 +81,35 @@ form.addEventListener("submit", async function (event) {
     console.log(error);
   }
 });
+
+
+//// AI generate decription category
+
+
+
+// async function fetchCategoryFromAI() {
+//   console.log("Fetch category hit frontend");
+  
+//     const descriptionVal = description.value.trim();
+//     if (descriptionVal.length < 3) return;
+//     console.log(descriptionVal)
+
+//     category.placeholder = "AI Thinking...";
+    
+//     console.log("before the Api Call");
+//     const res = await axios.post('/expense/suggest-category', {descriptionVal});
+//     const data = await res.json();
+//     console.log("Ai response is",data.category);
+//     if (data.category) {
+//         category.value = data.category;
+//     }
+// }
+
+
+
+
+
+
 
 const getAllExpenses = async () => {
   try {
@@ -181,7 +244,6 @@ function showExpenseReport(expenses) {
 
   expenses.forEach((item) => {
     const li = document.createElement("li");
-    console.log(item._id);
     li.innerHTML = `
       Rs ${item.amount} (${item.category}) ${item.description}
       <button id="btn" onclick="deleteExpense('${item._id}')">DeleteExpense</button>

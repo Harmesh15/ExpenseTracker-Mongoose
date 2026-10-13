@@ -41,16 +41,16 @@ forgotpassbtn.addEventListener('click', async () => {
 
 /////////////////////////////////// practice  /////////////////////////////////////////////////////
 
-socket.on("connection", (socket) => {
-    console.log("connnection stablish");
-})
+// socket.on("connection", (socket) => {
+//     console.log("connnection stablish");
+// })
 
-socket.emit("send_message", messageObkect);
+// socket.emit("send_message", messageObkect);
 
-// in backend
+// // in backend
 
-socket.io("send_message", (socket) => {
-    socket.emit("received message", (msg) => {
-        io.emit(msg);
-    })
-})
+// socket.io("send_message", (socket) => {
+//     socket.emit("received message", (msg) => {
+//         io.emit(msg);
+//     })
+// })
